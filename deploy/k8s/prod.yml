@@ -1,0 +1,57 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: captcha-service
+  namespace: captcha-service
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        name: captcha-service
+    spec:
+      containers:
+      - name: captcha-service
+        image: 621328583763.dkr.ecr.us-east-1.amazonaws.com/captcha-service/captcha-service:ejemplo-k8s
+        imagePullPolicy: Always
+        resources:
+          requests:
+            cpu: 100m
+            memory: 100Mi
+        ports:
+        - containerPort: 8080
+        securityContext:
+        #  runAsNonRoot: true
+        #  runAsUser: 10001
+        #  capabilities:
+        #    drop:
+        #      - all
+        #  readOnlyRootFilesystem: true
+      nodeSelector:
+        beta.kubernetes.io/os: linux
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: captcha-service
+  labels:
+    name: captcha-service
+  namespace: captcha-service
+spec:
+  type: NodePort
+  ports:
+  - port: 80
+    targetPort: 8080
+    nodePort: 32001
+  selector:
+    name: captcha-service
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: captcha-service-ingress
+  namespace: captcha-service
+spec:
+  backend:
+    serviceName: captcha-service
+    servicePort: 80
